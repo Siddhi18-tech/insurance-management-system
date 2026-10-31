@@ -1,0 +1,23 @@
+{
+  "name": "insurance-management-system",
+  "version": "1.0.0",
+  "description": "Full-Stack Insurance Management System with Node/Express/MongoDB backend and React/Vite/Tailwind frontend",
+  "scripts": {
+    "server": "npm --prefix insurance-backend run dev",
+    "client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "seed": "npm --prefix insurance-backend run seed"
+  },
+  "keywords": [
+    "insurance",
+    "react",
+    "vite",
+    "tailwind",
+    "nodejs",
+    "express",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "ISC"
+}
+
