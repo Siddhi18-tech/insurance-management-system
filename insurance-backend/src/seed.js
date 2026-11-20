@@ -81,6 +81,14 @@ const seedData = async () => {
         startDate: new Date('2026-01-01'),
         endDate: new Date('2027-01-01'),
         status: 'Active',
+        nomineeName: 'John Connor',
+        nomineeRelation: 'Child',
+        bankDetails: {
+          bankName: 'HDFC Bank',
+          accountHolderName: 'Sarah Connor',
+          accountNumber: '501004382910',
+          ifscCode: 'HDFC0000123'
+        },
         user: customer._id,
         agent: agent._id
       },
@@ -97,6 +105,14 @@ const seedData = async () => {
         startDate: new Date('2026-03-15'),
         endDate: new Date('2027-03-15'),
         status: 'Active',
+        nomineeName: 'John Connor',
+        nomineeRelation: 'Child',
+        bankDetails: {
+          bankName: 'State Bank of India',
+          accountHolderName: 'Sarah Connor',
+          accountNumber: '30291827361',
+          ifscCode: 'SBIN0001234'
+        },
         user: customer._id,
         agent: agent._id
       }

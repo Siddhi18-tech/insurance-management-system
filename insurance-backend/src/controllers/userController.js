@@ -232,7 +232,9 @@ const getUserPolicies = asyncHandler(async (req, res) => {
     });
   }
 
-  const policies = await Policy.find({ user: req.params.id }).sort({ createdAt: -1 });
+  const policies = await Policy.find({ user: req.params.id })
+    .populate('agent', 'name email phone')
+    .sort({ createdAt: -1 });
 
   res.status(200).json({
     success: true,
@@ -254,7 +256,8 @@ const getUserClaims = asyncHandler(async (req, res) => {
   }
 
   const claims = await Claim.find({ user: req.params.id })
-    .populate('policy', 'policyNumber title policyType status')
+    .populate('policy', 'policyNumber title policyType status coverageAmount premiumAmount bankDetails nomineeName nomineeRelation')
+    .populate('reviewedBy', 'name email role')
     .sort({ createdAt: -1 });
 
   res.status(200).json({

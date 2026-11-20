@@ -1,96 +1,138 @@
 import React from 'react';
-import { Shield, Calendar, Trash2, Download, UserCheck } from 'lucide-react';
+import { Shield, Calendar, Trash2, Download, UserCheck, Landmark } from 'lucide-react';
 import { generateReceiptPdf } from '../../utils/generateReceiptPdf';
 
 const typeColors = {
-  Health: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
-  Auto: 'bg-blue-500/10 text-blue-400 border-blue-500/30',
-  Life: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
-  Home: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-  Travel: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
-  Property: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
+  Health: 'bg-emerald-50 text-emerald-800 border-emerald-300',
+  Auto: 'bg-blue-50 text-blue-800 border-blue-300',
+  Life: 'bg-purple-50 text-purple-800 border-purple-300',
+  Home: 'bg-amber-50 text-amber-900 border-amber-300',
+  Travel: 'bg-cyan-50 text-cyan-900 border-cyan-300',
+  Property: 'bg-rose-50 text-rose-900 border-rose-300',
+};
+
+const topBorderColors = {
+  Health: 'border-t-emerald-600',
+  Auto: 'border-t-blue-600',
+  Life: 'border-t-purple-600',
+  Home: 'border-t-amber-500',
+  Travel: 'border-t-cyan-600',
+  Property: 'border-t-rose-600',
 };
 
 export default function PolicyCard({ policy, user, onDelete }) {
-  const badgeStyle = typeColors[policy.policyType] || 'bg-slate-800 text-slate-300 border-slate-700';
+  const badgeStyle = typeColors[policy.policyType] || 'bg-slate-100 text-slate-700 border-slate-200';
+  const topBorder = topBorderColors[policy.policyType] || 'border-t-blue-600';
 
   const startDateFormatted = policy.startDate ? new Date(policy.startDate).toLocaleDateString('en-IN') : 'N/A';
   const endDateFormatted = policy.endDate ? new Date(policy.endDate).toLocaleDateString('en-IN') : 'N/A';
+
+  const bank = policy.bankDetails || {};
+  const hasBank = bank.bankName || bank.accountNumber || bank.ifscCode;
 
   const handleDownload = () => {
     generateReceiptPdf(policy, user);
   };
 
+  // Helper to mask account number safely
+  const formatAccountNumber = (acc) => {
+    if (!acc) return '';
+    const clean = String(acc).trim();
+    if (clean.length <= 4) return clean;
+    return `••••••••${clean.slice(-4)}`;
+  };
+
   return (
-    <div className="bg-slate-900/90 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 shadow-lg transition-all duration-200 group flex flex-col justify-between">
+    <div className={`bg-white border-t-3 ${topBorder} border-x border-b border-slate-200 hover:border-slate-300 rounded-xl p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between`}>
       <div>
         {/* Top Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
-            <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-lg border ${badgeStyle}`}>
+            <span className={`px-2.5 py-0.5 text-xs font-bold rounded-md border ${badgeStyle}`}>
               {policy.policyType}
             </span>
-            <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
+            <span className="text-xs font-mono font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
               {policy.policyNumber}
             </span>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
             {policy.status}
           </span>
         </div>
 
         {/* Title & Description */}
-        <h3 className="text-base font-bold text-white group-hover:text-brand-300 transition-colors line-clamp-1">
+        <h3 className="text-base font-bold text-slate-900 line-clamp-1">
           {policy.title}
         </h3>
         {policy.description && (
-          <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+          <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
             {policy.description}
           </p>
         )}
 
-        {/* Nominee Tag (if specified) */}
+        {/* Financial Metrics */}
+        <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100">
+          <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+            <span className="text-[10px] uppercase font-bold text-slate-500 block">Coverage Limit</span>
+            <span className="text-sm font-bold text-slate-900 tracking-tight">
+              ₹{Number(policy.coverageAmount).toLocaleString('en-IN')}
+            </span>
+          </div>
+          <div className="bg-blue-50/70 p-2.5 rounded-lg border border-blue-200/80">
+            <span className="text-[10px] uppercase font-bold text-blue-800 block">Periodic Premium</span>
+            <span className="text-sm font-bold text-blue-900 tracking-tight">
+              ₹{Number(policy.premiumAmount).toLocaleString('en-IN')}
+              <span className="text-[10px] font-semibold text-blue-700"> /{policy.paymentFrequency?.toLowerCase() || 'yr'}</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Nominee Tag */}
         {policy.nomineeName && (
-          <div className="mt-2.5 flex items-center gap-1.5 text-xs text-slate-400 bg-slate-950/60 px-2.5 py-1 rounded-lg border border-slate-800/60">
-            <UserCheck className="w-3.5 h-3.5 text-brand-400 shrink-0" />
-            <span className="text-slate-500">Nominee:</span>
-            <span className="text-slate-200 font-medium">{policy.nomineeName}</span>
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-indigo-950 bg-indigo-50/70 px-2.5 py-1.5 rounded-lg border border-indigo-200/80">
+            <UserCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="text-slate-500 font-medium">Nominee:</span>
+            <span className="text-indigo-900 font-bold">{policy.nomineeName}</span>
             {policy.nomineeRelation && (
-              <span className="text-[10px] text-slate-400">({policy.nomineeRelation})</span>
+              <span className="text-[11px] text-indigo-700">({policy.nomineeRelation})</span>
             )}
           </div>
         )}
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-800/80">
-          <div className="bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/60">
-            <span className="text-[10px] uppercase font-semibold text-slate-500 block">Coverage Limit</span>
-            <span className="text-sm font-bold text-white tracking-tight">
-              ₹{Number(policy.coverageAmount).toLocaleString('en-IN')}
-            </span>
+        {/* Bank Mandate & Settlement Account Details */}
+        {hasBank && (
+          <div className="mt-2.5 p-2.5 bg-sky-50/70 rounded-lg border border-sky-200/80 text-xs">
+            <div className="flex items-center gap-1.5 text-blue-900 font-bold mb-1 text-[11px]">
+              <Landmark className="w-3.5 h-3.5 text-blue-700" />
+              <span>Mandate & Settlement Account</span>
+            </div>
+            <div className="text-[11px] text-slate-700 space-y-0.5">
+              {bank.bankName && (
+                <div><span className="text-slate-500">Bank:</span> <strong className="text-slate-900 font-semibold">{bank.bankName}</strong></div>
+              )}
+              {bank.accountNumber && (
+                <div><span className="text-slate-500">A/C:</span> <strong className="font-mono text-slate-900">{formatAccountNumber(bank.accountNumber)}</strong></div>
+              )}
+              {bank.ifscCode && (
+                <div><span className="text-slate-500">IFSC:</span> <strong className="font-mono text-slate-900">{bank.ifscCode}</strong></div>
+              )}
+            </div>
           </div>
-          <div className="bg-slate-950/50 p-2.5 rounded-xl border border-slate-800/60">
-            <span className="text-[10px] uppercase font-semibold text-slate-500 block">Premium</span>
-            <span className="text-sm font-bold text-brand-400 tracking-tight">
-              ₹{Number(policy.premiumAmount).toLocaleString('en-IN')}
-              <span className="text-[10px] font-normal text-slate-400"> /{policy.paymentFrequency?.toLowerCase() || 'yr'}</span>
-            </span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Footer Info & Actions */}
-      <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
-        <div className="flex items-center gap-1.5 text-[11px]">
-          <Calendar className="w-3.5 h-3.5 text-slate-500" />
+      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+        <div className="flex items-center gap-1 text-[11px]">
+          <Calendar className="w-3.5 h-3.5 text-slate-400" />
           <span>{startDateFormatted} — {endDateFormatted}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <button
             onClick={handleDownload}
-            title="Download PDF Receipt"
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-brand-600 text-slate-300 hover:text-white transition-colors text-xs font-medium cursor-pointer"
+            title="Download PDF Certificate & Receipt"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white transition-colors text-xs font-bold cursor-pointer border border-blue-200 hover:border-blue-600 shadow-2xs"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Receipt</span>
@@ -99,7 +141,7 @@ export default function PolicyCard({ policy, user, onDelete }) {
             <button
               onClick={() => onDelete(policy._id)}
               title="Delete Policy"
-              className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-950/40 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
             </button>

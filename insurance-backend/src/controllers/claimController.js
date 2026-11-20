@@ -147,9 +147,9 @@ const getClaims = asyncHandler(async (req, res) => {
 
   const [claims, total] = await Promise.all([
     Claim.find(query)
-      .populate('policy', 'policyNumber title policyType coverageAmount status')
-      .populate('user', 'name email phone')
-      .populate('reviewedBy', 'name email')
+      .populate('policy', 'policyNumber title policyType coverageAmount status premiumAmount bankDetails nomineeName nomineeRelation')
+      .populate('user', 'name email phone address')
+      .populate('reviewedBy', 'name email role')
       .sort(sort)
       .skip(skip)
       .limit(limitNum),

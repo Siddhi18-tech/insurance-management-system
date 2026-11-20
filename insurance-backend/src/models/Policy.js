@@ -86,6 +86,29 @@ const policySchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: ''
+    },
+    bankDetails: {
+      bankName: {
+        type: String,
+        trim: true,
+        default: ''
+      },
+      accountHolderName: {
+        type: String,
+        trim: true,
+        default: ''
+      },
+      accountNumber: {
+        type: String,
+        trim: true,
+        default: ''
+      },
+      ifscCode: {
+        type: String,
+        trim: true,
+        uppercase: true,
+        default: ''
+      }
     }
   },
   {

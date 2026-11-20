@@ -30,6 +30,10 @@ export const api = {
   // Auth & Users
   signup: (userData) => request('/api/users', { method: 'POST', body: userData }),
   login: (credentials) => request('/api/users/login', { method: 'POST', body: credentials }),
+  getUsers: (params = {}) => {
+    const searchParams = new URLSearchParams(params).toString();
+    return request(`/api/users${searchParams ? `?${searchParams}` : ''}`);
+  },
   getUser: (userId) => request(`/api/users/${userId}`),
   getUserPolicies: (userId) => request(`/api/users/${userId}/policies`),
   getUserClaims: (userId) => request(`/api/users/${userId}/claims`),

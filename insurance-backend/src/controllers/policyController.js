@@ -23,7 +23,12 @@ const createPolicy = asyncHandler(async (req, res) => {
     user,
     agent,
     nomineeName,
-    nomineeRelation
+    nomineeRelation,
+    bankDetails,
+    bankName,
+    accountHolderName,
+    accountNumber,
+    ifscCode
   } = req.body;
 
   // Verify that the user (policyholder) exists
@@ -73,7 +78,13 @@ const createPolicy = asyncHandler(async (req, res) => {
     user,
     agent,
     nomineeName: nomineeName || '',
-    nomineeRelation: nomineeRelation || ''
+    nomineeRelation: nomineeRelation || '',
+    bankDetails: bankDetails || {
+      bankName: bankName || '',
+      accountHolderName: accountHolderName || '',
+      accountNumber: accountNumber || '',
+      ifscCode: (ifscCode || '').toUpperCase()
+    }
   });
 
   const populatedPolicy = await Policy.findById(policy._id)
@@ -95,6 +106,7 @@ const getPolicies = asyncHandler(async (req, res) => {
     policyType,
     status,
     user,
+    agent,
     search,
     minCoverage,
     maxPremium,
@@ -116,6 +128,10 @@ const getPolicies = asyncHandler(async (req, res) => {
 
   if (user) {
     query.user = user;
+  }
+
+  if (agent) {
+    query.agent = agent;
   }
 
   if (minCoverage) {
@@ -141,8 +157,8 @@ const getPolicies = asyncHandler(async (req, res) => {
 
   const [policies, total] = await Promise.all([
     Policy.find(query)
-      .populate('user', 'name email phone role')
-      .populate('agent', 'name email')
+      .populate('user', 'name email phone role address')
+      .populate('agent', 'name email phone')
       .sort(sort)
       .skip(skip)
       .limit(limitNum),

@@ -9,25 +9,25 @@ export function generateReceiptPdf(policy, user) {
 
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  // Primary Header Banner
+  // Primary Header Banner (Navy corporate)
   doc.setFillColor(15, 23, 42); // slate-900
-  doc.rect(0, 0, pageWidth, 42, 'F');
+  doc.rect(0, 0, pageWidth, 40, 'F');
 
   // Accent Line
-  doc.setFillColor(12, 142, 233); // brand-500
-  doc.rect(0, 42, pageWidth, 2.5, 'F');
+  doc.setFillColor(37, 99, 235); // blue-600
+  doc.rect(0, 40, pageWidth, 2, 'F');
 
   // Company Brand
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.text('AegisShield Insurance', 14, 18);
+  doc.setFontSize(18);
+  doc.text('AgiesShield Insurance', 14, 18);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(148, 163, 184); // slate-400
-  doc.text('Next-Gen Policy Management & Claims Settlement System', 14, 25);
-  doc.text('Official Policy Certificate & Premium Receipt', 14, 32);
+  doc.text('Institutional Policy Certificate & Premium Electronic Receipt', 14, 25);
+  doc.text('Official Policy Administration System Record', 14, 31);
 
   // Document Metadata (Right aligned)
   const receiptNo = `REC-${policy.policyNumber || Date.now().toString().slice(-6)}`;
@@ -37,41 +37,41 @@ export function generateReceiptPdf(policy, user) {
     year: 'numeric',
   });
 
-  doc.setFontSize(9);
-  doc.setTextColor(203, 213, 225);
-  doc.text(`Receipt ID: ${receiptNo}`, pageWidth - 14, 20, { align: 'right' });
-  doc.text(`Issue Date: ${issueDate}`, pageWidth - 14, 26, { align: 'right' });
-  doc.text(`Status: ${policy.status || 'Active'}`, pageWidth - 14, 32, { align: 'right' });
+  doc.setFontSize(8.5);
+  doc.setTextColor(226, 232, 240);
+  doc.text(`Receipt No: ${receiptNo}`, pageWidth - 14, 18, { align: 'right' });
+  doc.text(`Issued On: ${issueDate}`, pageWidth - 14, 24, { align: 'right' });
+  doc.text(`Policy Status: ${policy.status || 'Active'}`, pageWidth - 14, 30, { align: 'right' });
 
-  let y = 56;
+  let y = 50;
 
-  // SECTION 1: Policyholder & Nominee Details
+  // SECTION 1: Insured, Nominee & Bank Mandate Information
   doc.setFillColor(248, 250, 252); // slate-50
-  doc.roundedRect(14, y, pageWidth - 28, 42, 3, 3, 'F');
+  doc.roundedRect(14, y, pageWidth - 28, 52, 2, 2, 'F');
   doc.setDrawColor(226, 232, 240); // slate-200
-  doc.roundedRect(14, y, pageWidth - 28, 42, 3, 3, 'S');
+  doc.roundedRect(14, y, pageWidth - 28, 52, 2, 2, 'S');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(15, 23, 42);
-  doc.text('1. Insured & Nominee Information', 20, y + 8);
+  doc.text('1. Insured Party, Nominee & Settlement Account Mandate', 20, y + 7);
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(71, 85, 105);
 
-  // Left column: Policyholder
-  doc.text('Policyholder Name:', 20, y + 18);
+  // Left column: Policyholder & Contact
+  doc.text('Policyholder Name:', 20, y + 16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
-  doc.text(user?.name || policy.user?.name || 'Insured Client', 58, y + 18);
+  doc.text(user?.name || policy.user?.name || 'Insured Client', 56, y + 16);
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
-  doc.text('Email / Contact:', 20, y + 26);
+  doc.text('Registered Email:', 20, y + 24);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
-  doc.text(user?.email || policy.user?.email || 'N/A', 58, y + 26);
+  doc.text(user?.email || policy.user?.email || 'N/A', 56, y + 24);
 
   // Right column: Nominee
   const nomineeName = policy.nomineeName?.trim() || 'Not Specified';
@@ -79,44 +79,70 @@ export function generateReceiptPdf(policy, user) {
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
-  doc.text('Nominee Name:', 115, y + 18);
+  doc.text('Nominee Name:', 115, y + 16);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
-  doc.text(nomineeName, 148, y + 18);
+  doc.text(nomineeName, 146, y + 16);
 
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(71, 85, 105);
-  doc.text('Nominee Relation:', 115, y + 26);
+  doc.text('Relationship:', 115, y + 24);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(15, 23, 42);
-  doc.text(nomineeRelation, 148, y + 26);
+  doc.text(nomineeRelation, 146, y + 24);
 
-  y += 50;
+  // Bank details row
+  const bank = policy.bankDetails || {};
+  const bankNameStr = bank.bankName ? String(bank.bankName) : 'Not Configured';
+  const rawAcc = bank.accountNumber ? String(bank.accountNumber) : '';
+  const maskedAcc = rawAcc.length > 4 ? `••••••••${rawAcc.slice(-4)}` : (rawAcc || 'N/A');
+  const ifscStr = bank.ifscCode ? String(bank.ifscCode) : 'N/A';
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text('Settlement Bank:', 20, y + 34);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text(bankNameStr, 56, y + 34);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text('Bank A/C & IFSC:', 115, y + 34);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(15, 23, 42);
+  doc.text(`${maskedAcc} (${ifscStr})`, 146, y + 34);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Mandate: Configured for automated ECS premium debit and direct claim settlements.', 20, y + 44);
+
+  y += 58;
 
   // SECTION 2: Policy Details
   doc.setFillColor(248, 250, 252);
-  doc.roundedRect(14, y, pageWidth - 28, 70, 3, 3, 'F');
+  doc.roundedRect(14, y, pageWidth - 28, 64, 2, 2, 'F');
   doc.setDrawColor(226, 232, 240);
-  doc.roundedRect(14, y, pageWidth - 28, 70, 3, 3, 'S');
+  doc.roundedRect(14, y, pageWidth - 28, 64, 2, 2, 'S');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(15, 23, 42);
-  doc.text('2. Policy Specifications & Coverage', 20, y + 8);
+  doc.text('2. Policy Specifications & Coverage Scope', 20, y + 7);
 
   const formatCurrency = (num) => `INR ${Number(num || 0).toLocaleString('en-IN')}`;
 
   const policyDetails = [
     ['Policy Number', policy.policyNumber || 'N/A'],
-    ['Policy Title', policy.title || 'Standard Plan'],
-    ['Coverage Type', policy.policyType || 'General'],
+    ['Policy Plan Title', policy.title || 'Standard Plan'],
+    ['Insurance Line / Type', policy.policyType || 'General'],
     ['Payment Frequency', policy.paymentFrequency || 'Annual'],
     ['Term Duration', `${policy.termMonths || 12} Months`],
     ['Effective Start Date', policy.startDate ? new Date(policy.startDate).toLocaleDateString('en-IN') : 'N/A'],
     ['Coverage Expiry Date', policy.endDate ? new Date(policy.endDate).toLocaleDateString('en-IN') : 'N/A'],
   ];
 
-  let currentDetailY = y + 18;
+  let currentDetailY = y + 16;
   policyDetails.forEach(([label, value]) => {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
@@ -125,94 +151,93 @@ export function generateReceiptPdf(policy, user) {
 
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(15, 23, 42);
-    doc.text(value, 65, currentDetailY);
+    doc.text(value, 68, currentDetailY);
 
-    currentDetailY += 7;
+    currentDetailY += 6.5;
   });
 
-  y += 78;
+  y += 70;
 
-  // SECTION 3: Financial Premium & Coverage Summary (Table Look)
+  // SECTION 3: Financial Summary Table
   doc.setFillColor(15, 23, 42);
-  doc.rect(14, y, pageWidth - 28, 8, 'F');
+  doc.rect(14, y, pageWidth - 28, 7, 'F');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(255, 255, 255);
-  doc.text('Description', 20, y + 5.5);
-  doc.text('Frequency / Terms', 105, y + 5.5);
-  doc.text('Amount (INR)', pageWidth - 20, y + 5.5, { align: 'right' });
+  doc.text('Coverage Line', 20, y + 5);
+  doc.text('Billing Terms', 105, y + 5);
+  doc.text('Amount (INR)', pageWidth - 20, y + 5, { align: 'right' });
 
-  y += 8;
+  y += 7;
 
   const rows = [
-    ['Premium Payment Due', policy.paymentFrequency || 'Annual', formatCurrency(policy.premiumAmount)],
-    ['Total Insured Coverage Limit', 'Maximum Protection', formatCurrency(policy.coverageAmount)],
-    ['Applicable Deductible', 'Per Claim Filing', formatCurrency(policy.deductibleAmount || 0)],
+    ['Periodic Premium Installment', policy.paymentFrequency || 'Annual', formatCurrency(policy.premiumAmount)],
+    ['Total Insured Coverage Sum', 'Maximum Admissible Limit', formatCurrency(policy.coverageAmount)],
+    ['Applicable Policy Deductible', 'Per Claim Incurred', formatCurrency(policy.deductibleAmount || 0)],
   ];
 
   rows.forEach(([desc, freq, amt], idx) => {
     doc.setFillColor(idx % 2 === 0 ? 255 : 248, idx % 2 === 0 ? 255 : 250, idx % 2 === 0 ? 255 : 252);
-    doc.rect(14, y, pageWidth - 28, 9, 'F');
+    doc.rect(14, y, pageWidth - 28, 8, 'F');
     doc.setDrawColor(226, 232, 240);
-    doc.line(14, y + 9, pageWidth - 14, y + 9);
+    doc.line(14, y + 8, pageWidth - 14, y + 8);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.setTextColor(15, 23, 42);
-    doc.text(desc, 20, y + 6);
-    doc.text(freq, 105, y + 6);
+    doc.text(desc, 20, y + 5.5);
+    doc.text(freq, 105, y + 5.5);
 
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(12, 142, 233);
-    doc.text(amt, pageWidth - 20, y + 6, { align: 'right' });
+    doc.setTextColor(37, 99, 235);
+    doc.text(amt, pageWidth - 20, y + 5.5, { align: 'right' });
 
-    y += 9;
+    y += 8;
   });
 
   y += 12;
 
-  // Verification & Sign-off Box
+  // Legal and digital attestation box
   doc.setFillColor(241, 245, 249);
-  doc.roundedRect(14, y, pageWidth - 28, 30, 2, 2, 'F');
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(100, 116, 139);
-  doc.text('Terms & Legal Attestation:', 20, y + 7);
-  doc.text(
-    'This electronic receipt serves as valid proof of insurance coverage issued by AegisShield.',
-    20,
-    y + 13
-  );
-  doc.text(
-    'All claims and settlements remain subject to the underwriting conditions defined in the policy agreement.',
-    20,
-    y + 18
-  );
-
-  // Digital Signature seal (Right)
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(15, 23, 42);
-  doc.text('AUTHORIZED REGISTRAR', pageWidth - 20, y + 13, { align: 'right' });
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(8);
-  doc.setTextColor(12, 142, 233);
-  doc.text('Digitally Signed & Validated', pageWidth - 20, y + 19, { align: 'right' });
-
-  // Footer page notes
+  doc.roundedRect(14, y, pageWidth - 28, 26, 2, 2, 'F');
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Statutory Declaration:', 20, y + 6);
+  doc.text(
+    'This computer-generated receipt serves as authentic certificate of active insurance coverage.',
+    20,
+    y + 11
+  );
+  doc.text(
+    'All premium remittances and claims remain governed by statutory insurance underwriting guidelines.',
+    20,
+    y + 16
+  );
+
+  // Digital Signature
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(15, 23, 42);
+  doc.text('REGISTRAR & UNDERWRITER', pageWidth - 20, y + 11, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(37, 99, 235);
+  doc.text('Digitally Authenticated Document', pageWidth - 20, y + 17, { align: 'right' });
+
+  // Page Footer
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
   doc.setTextColor(148, 163, 184);
   doc.text(
-    `AegisShield Insurance Portal • System Generated on ${new Date().toLocaleString()} • Policy Ref: ${policy._id}`,
+    `AgiesShield Insurance Portal • System Generated on ${new Date().toLocaleString('en-IN')} • Policy ID: ${policy._id}`,
     pageWidth / 2,
     doc.internal.pageSize.getHeight() - 8,
     { align: 'center' }
   );
 
-  // Trigger browser download
+  // Download trigger
   const cleanNumber = policy.policyNumber ? policy.policyNumber.replace(/[^a-zA-Z0-9_-]/g, '') : 'policy';
-  doc.save(`Receipt-${cleanNumber}.pdf`);
+  doc.save(`PolicyReceipt-${cleanNumber}.pdf`);
 }
-
