@@ -229,68 +229,163 @@ export default function Dashboard() {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 flex-1 w-full space-y-6">
-        {/* ACTIVE REMINDERS ALERTS BANNER (Tailwind Alert Components with Rich Amber/Blue Styling) */}
+        {/* ACTIVE REMINDERS ALERTS BANNER */}
         {reminders.length > 0 && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-amber-800 uppercase tracking-wider">
-              <BellRing className="w-3.5 h-3.5 text-amber-600" />
-              <span>Active Premium Reminders ({reminders.length})</span>
+            <div className="flex items-center gap-2 text-xs font-bold text-red-800 uppercase tracking-wider">
+              <BellRing className="w-3.5 h-3.5 text-red-600 animate-pulse" />
+              <span>Premium Payment Reminders ({reminders.length})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {reminders.map((rem) => {
-                const dueDateFormatted = new Date(rem.dueDate).toLocaleDateString('en-IN', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric'
-                });
-                const diffDays = Math.ceil((new Date(rem.dueDate).getTime() - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
-                const isUrgent = diffDays <= 7;
+              {reminders
+                .slice()
+                .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+                .map((rem) => {
+                  const dueDateFormatted = new Date(rem.dueDate).toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  });
+                  const diffDays = Math.ceil(
+                    (new Date(rem.dueDate).getTime() - new Date().setHours(0, 0, 0, 0)) /
+                      (1000 * 60 * 60 * 24)
+                  );
 
-                return (
-                  <div
-                    key={rem._id}
-                    className={`flex items-start justify-between p-4 rounded-xl border transition-all shadow-sm ${
-                      isUrgent
-                        ? 'bg-amber-50/90 border-amber-300 text-amber-950'
-                        : 'bg-blue-50/90 border-blue-200 text-blue-950'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-lg mt-0.5 ${isUrgent ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                        <Bell className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900">{rem.title}</h4>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                            diffDays <= 0
-                              ? 'bg-red-100 text-red-800 border-red-300'
-                              : isUrgent
-                              ? 'bg-amber-100 text-amber-800 border-amber-300'
-                              : 'bg-blue-100 text-blue-800 border-blue-300'
-                          }`}>
-                            {diffDays <= 0 ? 'Due Today / Overdue' : `Due in ${diffDays} days`}
-                          </span>
-                        </div>
-                        <div className="text-xs text-slate-600 mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
-                          <span>Due Date: <strong className="text-slate-900 font-semibold">{dueDateFormatted}</strong></span>
-                          <span>Premium: <strong className="text-blue-900 font-mono font-bold text-sm">₹{Number(rem.amount).toLocaleString('en-IN')}</strong></span>
-                          {rem.policy?.policyNumber && (
-                            <span className="text-slate-600 font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-slate-200">{rem.policy.policyNumber}</span>
+                  // ── Urgency tiers ──
+                  const isOverdue   = diffDays <= 0;          // red fast-blink
+                  const isCritical  = diffDays > 0 && diffDays <= 10;  // red slow-blink
+                  const isWarning   = diffDays > 10 && diffDays <= 15; // orange glow
+                  const isNormal    = diffDays > 15;                   // blue calm
+
+                  // CSS animation class
+                  const animClass = isOverdue
+                    ? 'reminder-overdue'
+                    : isCritical
+                    ? 'reminder-critical'
+                    : isWarning
+                    ? 'reminder-warning'
+                    : '';
+
+                  // Container styling
+                  const containerStyle = isOverdue || isCritical
+                    ? 'bg-red-50 border-red-400 text-red-950'
+                    : isWarning
+                    ? 'bg-orange-50 border-orange-400 text-orange-950'
+                    : 'bg-blue-50/90 border-blue-200 text-blue-950';
+
+                  // Icon background
+                  const iconStyle = isOverdue || isCritical
+                    ? 'bg-red-100 text-red-700'
+                    : isWarning
+                    ? 'bg-orange-100 text-orange-700'
+                    : 'bg-blue-100 text-blue-700';
+
+                  // Days badge styling
+                  const badgeStyle = isOverdue
+                    ? 'bg-red-600 text-white border-red-700 font-extrabold'
+                    : isCritical
+                    ? 'bg-red-100 text-red-900 border-red-400 font-bold'
+                    : isWarning
+                    ? 'bg-orange-100 text-orange-900 border-orange-400 font-semibold'
+                    : 'bg-blue-100 text-blue-800 border-blue-300';
+
+                  // Label text
+                  const daysLabel = isOverdue
+                    ? '⚠ OVERDUE / DUE TODAY'
+                    : isCritical
+                    ? `🔴 URGENT — Due in ${diffDays} day${diffDays === 1 ? '' : 's'}`
+                    : isWarning
+                    ? `⚡ Due in ${diffDays} days`
+                    : `Due in ${diffDays} days`;
+
+                  return (
+                    <div
+                      key={rem._id}
+                      className={`flex items-start justify-between p-4 rounded-xl border-2 transition-all shadow-sm ${containerStyle} ${animClass}`}
+                    >
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {/* Bell Icon with urgency indicator */}
+                        <div className={`p-2 rounded-lg mt-0.5 shrink-0 ${iconStyle}`}>
+                          {isOverdue || isCritical ? (
+                            <BellRing className="w-4 h-4 animate-bounce" />
+                          ) : (
+                            <Bell className="w-4 h-4" />
                           )}
                         </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h4 className={`text-sm font-bold leading-tight ${
+                              isOverdue || isCritical ? 'text-red-900' : isWarning ? 'text-orange-900' : 'text-slate-900'
+                            }`}>
+                              {rem.title}
+                            </h4>
+                            {/* Urgency Days Badge */}
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] border ${badgeStyle} whitespace-nowrap`}>
+                              {daysLabel}
+                            </span>
+                          </div>
+
+                          {/* Critical / Overdue warning message */}
+                          {(isOverdue || isCritical) && (
+                            <p className="text-[11px] text-red-800 font-semibold mb-1 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping inline-block" />
+                              Immediate payment required to avoid policy lapse
+                            </p>
+                          )}
+                          {isWarning && (
+                            <p className="text-[11px] text-orange-800 font-semibold mb-1 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse inline-block" />
+                              Payment due soon — please schedule in advance
+                            </p>
+                          )}
+
+                          {/* Meta row */}
+                          <div className={`text-xs flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 ${
+                            isOverdue || isCritical ? 'text-red-800' : isWarning ? 'text-orange-800' : 'text-slate-600'
+                          }`}>
+                            <span>
+                              Due Date:{' '}
+                              <strong className={`font-bold ${
+                                isOverdue || isCritical ? 'text-red-900' : isWarning ? 'text-orange-900' : 'text-slate-900'
+                              }`}>
+                                {dueDateFormatted}
+                              </strong>
+                            </span>
+                            <span>
+                              Premium:{' '}
+                              <strong className={`font-mono font-bold text-sm ${
+                                isOverdue || isCritical ? 'text-red-900' : isWarning ? 'text-orange-900' : 'text-blue-900'
+                              }`}>
+                                ₹{Number(rem.amount).toLocaleString('en-IN')}
+                              </strong>
+                            </span>
+                            {rem.policy?.policyNumber && (
+                              <span className="font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-slate-200 text-slate-700">
+                                {rem.policy.policyNumber}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Dismiss Button */}
+                      <button
+                        onClick={() => handleDismissReminder(rem._id)}
+                        title="Acknowledge and dismiss"
+                        className={`p-1.5 rounded-md transition-colors ml-2 cursor-pointer shrink-0 ${
+                          isOverdue || isCritical
+                            ? 'text-red-400 hover:text-red-800 hover:bg-red-200/60'
+                            : isWarning
+                            ? 'text-orange-400 hover:text-orange-800 hover:bg-orange-200/60'
+                            : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200/60'
+                        }`}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
-                    <button
-                      onClick={() => handleDismissReminder(rem._id)}
-                      title="Acknowledge and dismiss"
-                      className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors ml-2 cursor-pointer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         )}
