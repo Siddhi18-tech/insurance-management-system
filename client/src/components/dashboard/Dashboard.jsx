@@ -232,8 +232,8 @@ export default function Dashboard() {
         {/* ACTIVE REMINDERS ALERTS BANNER */}
         {reminders.length > 0 && (
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs font-bold text-red-800 uppercase tracking-wider">
-              <BellRing className="w-3.5 h-3.5 text-red-600 animate-pulse" />
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wider">
+              <BellRing className="w-3.5 h-3.5 text-amber-600" />
               <span>Premium Payment Reminders ({reminders.length})</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -251,112 +251,76 @@ export default function Dashboard() {
                       (1000 * 60 * 60 * 24)
                   );
 
-                  // ── Urgency tiers ──
-                  const isOverdue   = diffDays <= 0;          // red fast-blink
-                  const isCritical  = diffDays > 0 && diffDays <= 10;  // red slow-blink
-                  const isWarning   = diffDays > 10 && diffDays <= 15; // orange glow
-                  const isNormal    = diffDays > 15;                   // blue calm
-
-                  // CSS animation class
-                  const animClass = isOverdue
-                    ? 'reminder-overdue'
-                    : isCritical
-                    ? 'reminder-critical'
-                    : isWarning
-                    ? 'reminder-warning'
-                    : '';
-
-                  // Container styling
-                  const containerStyle = isOverdue || isCritical
-                    ? 'bg-red-50 border-red-400 text-red-950'
-                    : isWarning
-                    ? 'bg-orange-50 border-orange-400 text-orange-950'
-                    : 'bg-blue-50/90 border-blue-200 text-blue-950';
-
-                  // Icon background
-                  const iconStyle = isOverdue || isCritical
-                    ? 'bg-red-100 text-red-700'
-                    : isWarning
-                    ? 'bg-orange-100 text-orange-700'
-                    : 'bg-blue-100 text-blue-700';
-
-                  // Days badge styling
-                  const badgeStyle = isOverdue
-                    ? 'bg-red-600 text-white border-red-700 font-extrabold'
-                    : isCritical
-                    ? 'bg-red-100 text-red-900 border-red-400 font-bold'
-                    : isWarning
-                    ? 'bg-orange-100 text-orange-900 border-orange-400 font-semibold'
-                    : 'bg-blue-100 text-blue-800 border-blue-300';
-
-                  // Label text
-                  const daysLabel = isOverdue
-                    ? '⚠ OVERDUE / DUE TODAY'
-                    : isCritical
-                    ? `🔴 URGENT — Due in ${diffDays} day${diffDays === 1 ? '' : 's'}`
-                    : isWarning
-                    ? `⚡ Due in ${diffDays} days`
-                    : `Due in ${diffDays} days`;
+                  // Single rule: due within 15 days (including overdue) = deep red blinking
+                  const isDue = diffDays <= 15;
 
                   return (
                     <div
                       key={rem._id}
-                      className={`flex items-start justify-between p-4 rounded-xl border-2 transition-all shadow-sm ${containerStyle} ${animClass}`}
+                      className={`flex items-start justify-between p-4 rounded-xl border-2 transition-all shadow-sm ${
+                        isDue
+                          ? 'bg-red-50 border-red-700 text-red-950 reminder-due'
+                          : 'bg-blue-50/90 border-blue-200 text-blue-950'
+                      }`}
                     >
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        {/* Bell Icon with urgency indicator */}
-                        <div className={`p-2 rounded-lg mt-0.5 shrink-0 ${iconStyle}`}>
-                          {isOverdue || isCritical ? (
-                            <BellRing className="w-4 h-4 animate-bounce" />
-                          ) : (
-                            <Bell className="w-4 h-4" />
-                          )}
+                        {/* Bell icon */}
+                        <div className={`p-2 rounded-lg mt-0.5 shrink-0 ${
+                          isDue ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {isDue
+                            ? <BellRing className="w-4 h-4 animate-bounce" />
+                            : <Bell className="w-4 h-4" />
+                          }
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
                             <h4 className={`text-sm font-bold leading-tight ${
-                              isOverdue || isCritical ? 'text-red-900' : isWarning ? 'text-orange-900' : 'text-slate-900'
+                              isDue ? 'text-red-900' : 'text-slate-900'
                             }`}>
                               {rem.title}
                             </h4>
-                            {/* Urgency Days Badge */}
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] border ${badgeStyle} whitespace-nowrap`}>
-                              {daysLabel}
+
+                            {/* Days badge */}
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] border whitespace-nowrap font-bold ${
+                              isDue
+                                ? diffDays <= 0
+                                  ? 'bg-red-700 text-white border-red-900'
+                                  : 'bg-red-100 text-red-900 border-red-500'
+                                : 'bg-blue-100 text-blue-800 border-blue-300 font-semibold'
+                            }`}>
+                              {diffDays <= 0
+                                ? '⚠ OVERDUE / DUE TODAY'
+                                : isDue
+                                ? `🔴 Due in ${diffDays} day${diffDays === 1 ? '' : 's'}`
+                                : `Due in ${diffDays} days`}
                             </span>
                           </div>
 
-                          {/* Critical / Overdue warning message */}
-                          {(isOverdue || isCritical) && (
+                          {/* Urgency sub-message */}
+                          {isDue && (
                             <p className="text-[11px] text-red-800 font-semibold mb-1 flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping inline-block" />
-                              Immediate payment required to avoid policy lapse
-                            </p>
-                          )}
-                          {isWarning && (
-                            <p className="text-[11px] text-orange-800 font-semibold mb-1 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse inline-block" />
-                              Payment due soon — please schedule in advance
+                              {diffDays <= 0
+                                ? 'Payment overdue — policy may lapse. Pay immediately.'
+                                : 'Payment due within 15 days — please pay to avoid policy lapse.'}
                             </p>
                           )}
 
                           {/* Meta row */}
                           <div className={`text-xs flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 ${
-                            isOverdue || isCritical ? 'text-red-800' : isWarning ? 'text-orange-800' : 'text-slate-600'
+                            isDue ? 'text-red-800' : 'text-slate-600'
                           }`}>
                             <span>
                               Due Date:{' '}
-                              <strong className={`font-bold ${
-                                isOverdue || isCritical ? 'text-red-900' : isWarning ? 'text-orange-900' : 'text-slate-900'
-                              }`}>
+                              <strong className={`font-bold ${isDue ? 'text-red-900' : 'text-slate-900'}`}>
                                 {dueDateFormatted}
                               </strong>
                             </span>
                             <span>
                               Premium:{' '}
-                              <strong className={`font-mono font-bold text-sm ${
-                                isOverdue || isCritical ? 'text-red-900' : isWarning ? 'text-orange-900' : 'text-blue-900'
-                              }`}>
+                              <strong className={`font-mono font-bold text-sm ${isDue ? 'text-red-900' : 'text-blue-900'}`}>
                                 ₹{Number(rem.amount).toLocaleString('en-IN')}
                               </strong>
                             </span>
@@ -369,15 +333,13 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      {/* Dismiss Button */}
+                      {/* Dismiss button */}
                       <button
                         onClick={() => handleDismissReminder(rem._id)}
                         title="Acknowledge and dismiss"
                         className={`p-1.5 rounded-md transition-colors ml-2 cursor-pointer shrink-0 ${
-                          isOverdue || isCritical
-                            ? 'text-red-400 hover:text-red-800 hover:bg-red-200/60'
-                            : isWarning
-                            ? 'text-orange-400 hover:text-orange-800 hover:bg-orange-200/60'
+                          isDue
+                            ? 'text-red-400 hover:text-red-900 hover:bg-red-200/60'
                             : 'text-slate-400 hover:text-slate-700 hover:bg-slate-200/60'
                         }`}
                       >
